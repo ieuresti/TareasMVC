@@ -1,12 +1,49 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using TareasMVC;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+var politicaUsuariosAutenticados = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+// Add services to the container
+builder.Services.AddControllersWithViews(opciones =>
+{
+    opciones.Filters.Add(new AuthorizeFilter(politicaUsuariosAutenticados));
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(opciones => opciones.UseSqlServer("name=DefaultConnection"));
+builder.Services.AddAuthentication()
+    .AddGoogle(opciones =>
+    {
+        opciones.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        opciones.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+        // Capturar fallos remotos (p. ej. error=access_denied) y redirigir al login en vez de dejar que
+        // el middleware lance AuthenticationFailureException sin control.
+        opciones.Events.OnRemoteFailure = context =>
+        {
+            var mensaje = context.Failure?.Message ?? "Error de autenticación externa";
+            var redirect = $"/usuarios/login?mensaje={System.Net.WebUtility.UrlEncode(mensaje)}";
+            context.Response.Redirect(redirect);
+            context.HandleResponse(); // evita que la excepción se propague
+            return Task.CompletedTask;
+        };
+    });
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(opciones =>
+{
+    opciones.SignIn.RequireConfirmedAccount = false;
+}).AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+builder.Services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme, opciones =>
+{
+    opciones.LoginPath = "/usuarios/login";
+    opciones.AccessDeniedPath = "/usuarios/login";
+});
 
 var app = builder.Build();
 
@@ -20,6 +57,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
