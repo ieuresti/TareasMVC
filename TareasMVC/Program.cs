@@ -1,9 +1,10 @@
+using TareasMVC;
+using TareasMVC.Servicios;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
-using TareasMVC;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +45,9 @@ builder.Services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.Ap
     opciones.LoginPath = "/usuarios/login";
     opciones.AccessDeniedPath = "/usuarios/login";
 });
+
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddTransient<IServicioUsuarios, ServicioUsuarios>();
 
 var app = builder.Build();
 
