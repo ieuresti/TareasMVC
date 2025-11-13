@@ -117,6 +117,14 @@ async function manejarClickTarea(tarea) {
     tareaEditarVM.id = json.id;
     tareaEditarVM.titulo(json.titulo);
     tareaEditarVM.descripcion(json.descripcion);
+    // Limpiar arreglo pasos para evitar inserciones al consultar
+    tareaEditarVM.pasos([]);
+
+    json.pasos.forEach(paso => {
+        tareaEditarVM.pasos.push(
+            new pasoViewModel({...paso, modoEdicion: false})
+        )
+    });
 
     modalEditarBootstrap.show();
 }
@@ -189,6 +197,11 @@ async function borrarTarea(tarea) {
 
 function obtenerIndiceTareaEnEdicion() {
     return tareaListadoViewModel.tareas().findIndex(t => t.id() == tareaEditarVM.id);
+}
+
+function obtenerTareaEnEdicion() {
+    const indice = obtenerIndiceTareaEnEdicion();
+    return tareaListadoViewModel.tareas()[indice];
 }
 
 $(function () {
