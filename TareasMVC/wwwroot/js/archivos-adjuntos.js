@@ -106,3 +106,7 @@ async function borrarArchivoAdjunto(archivoAdjunto) {
 
     tareaEditarVM.archivosAdjuntos.remove(function (item) { return item.id == archivoAdjunto.id });
 }
+
+function manejarClickDescargarArchivoAdjunto(archivoAdjunto) {
+    descargarArchivo(archivoAdjunto.url, archivoAdjunto.titulo());
+}
