@@ -90,5 +90,26 @@ namespace TareasMVC.Controllers
             await context.SaveChangesAsync();
             return Ok();
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
+            var archivoAdjunto = await context.ArchivosAdjuntos.Include(a => a.Tarea).FirstOrDefaultAsync(a => a.Id == id);
+            if (archivoAdjunto is null)
+            {
+                return NotFound();
+            }
+            if (archivoAdjunto.Tarea.UsuarioCreacionId != usuarioId)
+            {
+                return Forbid();
+            }
+
+            context.Remove(archivoAdjunto);
+            await context.SaveChangesAsync();
+            await almacenadorArchivos.Borrar(archivoAdjunto.Url, contenedor);
+            return Ok();
+        }
     }
 }
